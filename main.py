@@ -5,7 +5,6 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator, ValidationError
 import uvicorn
-from pathlib import Path
 import os
 
 app = FastAPI()
@@ -27,23 +26,21 @@ class Settings(BaseModel):
     eta: float = Field(0.0, ge=0.0, le=1.0)
 
     @field_validator("image_size")
-    def validate_image_size(cls, v):
+    def validate_image_size(self, v):
         width, height = v.split("x")
         if not (width.isdigit() and height.isdigit()):
             raise ValueError('image_size must be in the format "widthxheight"')
         return v
 
     @field_validator("output_format")
-    def validate_output_format(cls, v):
+    def validate_output_format(self, v):
         if v.lower() not in ["png", "jpg", "jpeg", "webp"]:
             raise ValueError('output_format must be one of: png, jpg, jpeg, webp')
         return v.lower()
 
     @field_validator("seed")
-    def validate_seed(cls, v):
-        if v is None:
-            return None
-        return v
+    def validate_seed(self, v):
+        return None if v is None else v
 
 
 class GenerateRequest(BaseModel):
@@ -65,13 +62,13 @@ class StableDiffusionGenerator:
                 or self.custom_model_path
             ):
                 model_path = (
-                    self.custom_model_path if self.custom_model_path else model_version
+                    self.custom_model_path or model_version
                 )
                 self.pipeline = StableDiffusionPipeline.from_pretrained(
                     model_path,
                     torch_dtype=torch.float16 if use_half_precision else torch.float32,
                     variant="fp16" if use_half_precision else None,
-                    safety_checker=None if not settings.safety_checker else None,
+                    safety_checker=None if settings.safety_checker else None,
                 )
                 if settings.safety_checker and self.pipeline is not None:
                     self.pipeline.safety_checker = self.pipeline.safety_checker
@@ -86,7 +83,7 @@ class StableDiffusionGenerator:
                     )
                 self.custom_model_path = None
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Error loading pipeline: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"Error loading pipeline: {str(e)}") from e
 
     def generate(self, prompt: str, settings: Settings) -> str:
         if not prompt or not prompt.strip():
@@ -104,7 +101,7 @@ class StableDiffusionGenerator:
                 raise HTTPException(status_code=400, detail="Invalid image size format")
 
             try:
-                generator = (
+                seed_generator = (
                     torch.manual_seed(settings.seed) if settings.seed is not None else None
                 )
             except Exception as e:
@@ -120,7 +117,7 @@ class StableDiffusionGenerator:
                         height=height,
                         num_images_per_prompt=settings.num_images,
                         eta=settings.eta,
-                        generator=generator,
+                        generator=seed_generator,
                     )
                     images = output.images
                 except Exception as e:
@@ -143,13 +140,17 @@ class StableDiffusionGenerator:
                         image.save(save_path)
                     image_paths.append(save_path)
                 except Exception as e:
-                    raise HTTPException(status_code=500, detail=f"Error saving image: {str(e)}")
+                    raise HTTPException(
+                        status_code=500, detail=f"Error saving image: {str(e)}"
+                    ) from e
 
             return image_paths
         except Exception as e:
             if isinstance(e, HTTPException):
                 raise e
-            raise HTTPException(status_code=500, detail=f"Error generating image: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"Error generating image: {str(e)}"
+            ) from e
 
 
 generator = StableDiffusionGenerator()
