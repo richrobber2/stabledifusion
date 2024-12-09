@@ -21,8 +21,9 @@ body {
 
 .container {
     display: grid;
-    grid-template-columns: 300px 1fr;
+    grid-template-columns: minmax(280px, 300px) 1fr;
     height: 100vh;
+    transition: all 0.3s ease;
 }
 
 .sidebar {
@@ -30,6 +31,9 @@ body {
     padding: 20px;
     border-right: 1px solid rgba(255, 255, 255, 0.1);
     position: relative;
+    transition: background-color 0.3s ease;
+    overflow-y: auto;
+    height: 100vh;
 }
 
 .main-content {
@@ -38,6 +42,8 @@ body {
     flex-direction: column;
     gap: 20px;
     overflow-y: auto;
+    align-items: center;
+    justify-content: center;
 }
 
 #prompt {
@@ -51,6 +57,12 @@ body {
     font-size: 14px;
     resize: vertical;
     margin: 10px 0;
+    transition: all 0.2s ease;
+}
+
+#prompt:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(88, 101, 242, 0.2);
 }
 
 button {
@@ -61,11 +73,17 @@ button {
     border-radius: 4px;
     cursor: pointer;
     font-weight: 600;
-    transition: background 0.2s;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
 }
 
 button:hover {
     background: #4752c4;
+}
+
+button:active {
+    transform: translateY(1px);
 }
 
 .status {
@@ -77,6 +95,10 @@ button:hover {
     max-width: 100%;
     border-radius: 10px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    width: 100%;
+    height: auto;
+    object-fit: contain;
 }
 
 .settings-toggle {
@@ -92,7 +114,9 @@ button:hover {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: transform 0.2s;
+    transition: all 0.2s ease;
+    z-index: 1000;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .settings-toggle:hover {
@@ -109,4 +133,55 @@ button:hover {
 
 .no-select {
     user-select: none;
+}
+
+.memory-monitor {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 15px;
+}
+
+.memory-title {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+
+.memory-bar {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.memory-used {
+    height: 100%;
+    background: var(--accent);
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+.memory-stats {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: right;
+}
+
+@media (max-width: 768px) {
+    .container {
+        grid-template-columns: 1fr;
+    }
+
+    .sidebar {
+        max-height: 40vh;
+        overflow-y: auto;
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .main-content {
+        height: 60vh;
+    }
 }

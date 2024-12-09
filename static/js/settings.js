@@ -1,6 +1,16 @@
 export function toggleSettings() {
     const settingsPanel = document.getElementById('settingsPanel');
-    settingsPanel.style.display = settingsPanel.style.display === 'none' ? 'block' : 'none';
+    if (settingsPanel.style.display === 'none') {
+        settingsPanel.style.display = 'block';
+        // Force browser reflow
+        settingsPanel.offsetHeight;
+        settingsPanel.classList.add('visible');
+    } else {
+        settingsPanel.classList.remove('visible');
+        setTimeout(() => {
+            settingsPanel.style.display = 'none';
+        }, 300); // Match the CSS transition duration
+    }
 }
 
 export function getSettings() {
@@ -63,9 +73,42 @@ export function makeSettingsPanelDraggable() {
         document.body.classList.remove('no-select');
     }
 
+    // Add smooth drag transitions
     function setTranslate(xPos, yPos, el) {
         el.style.transform = `translate3d(${xPos}px, ${yPos}px, 0)`;
+        el.style.transition = isDragging ? 'none' : 'transform 0.2s ease';
     }
+}
+
+export function startMemoryMonitoring() {
+    const updateMemoryStats = async () => {
+        try {
+            const response = await fetch('/memory_stats');
+            const data = await response.json();
+            
+            if (data.error) {
+                console.error('Memory monitoring error:', data.error);
+                return;
+            }
+
+            const memoryBar = document.getElementById('memoryUsed');
+            const memoryText = document.getElementById('memoryText');
+            
+            const percentUsed = (data.used / data.total) * 100;
+            memoryBar.style.width = `${percentUsed}%`;
+            memoryBar.style.backgroundColor = percentUsed > 90 ? '#ff4444' : 
+                                            percentUsed > 75 ? '#ffaa44' : 
+                                            'var(--accent)';
+            
+            memoryText.textContent = `${data.used.toFixed(1)} / ${data.total.toFixed(1)} GB`;
+        } catch (error) {
+            console.error('Failed to fetch memory stats:', error);
+        }
+    };
+
+    // Update immediately and then every 2 seconds
+    updateMemoryStats();
+    return setInterval(updateMemoryStats, 2000);
 }
 
 document.querySelectorAll('input[type="range"]').forEach(range => {
@@ -76,3 +119,4 @@ document.querySelectorAll('input[type="range"]').forEach(range => {
 });
 
 makeSettingsPanelDraggable();
+startMemoryMonitoring(); // Start monitoring

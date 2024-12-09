@@ -14,10 +14,19 @@
     max-width: 400px;
     resize: horizontal;
     overflow: auto;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateZ(0);
+    opacity: 0;
+    z-index: 1000;
+}
+
+.settings-panel.visible {
+    opacity: 1;
 }
 
 .settings-group {
     margin-bottom: 20px;
+    transition: opacity 0.2s ease;
 }
 
 .settings-group h4 {
@@ -48,11 +57,36 @@
     padding: 8px;
     color: var(--text);
     font-size: 13px;
+    transition: all 0.2s ease;
+}
+
+.setting-item input[type="number"]:focus,
+.setting-item input[type="text"]:focus,
+.setting-item select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(88, 101, 242, 0.2);
 }
 
 .setting-item input[type="range"] {
     width: 100%;
     accent-color: var(--accent);
+    transition: all 0.2s ease;
+    height: 4px;
+    border-radius: 2px;
+}
+
+.setting-item input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    background: var(--accent);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.setting-item input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
 }
 
 .setting-item .range-value {
@@ -65,4 +99,23 @@
     display: flex;
     align-items: center;
     gap: 8px;
+}
+
+.checkbox-wrapper input[type="checkbox"] {
+    cursor: pointer;
+    position: relative;
+    width: 16px;
+    height: 16px;
+}
+
+@media (max-width: 768px) {
+    .settings-panel {
+        position: fixed;
+        top: auto;
+        bottom: 20px;
+        right: 20px;
+        max-width: calc(100vw - 40px);
+        max-height: 80vh;
+        overflow-y: auto;
+    }
 }

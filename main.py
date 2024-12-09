@@ -5,6 +5,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator, ValidationError
 import uvicorn
+from pathlib import Path
 import os
 
 app = FastAPI()
@@ -26,20 +27,20 @@ class Settings(BaseModel):
     eta: float = Field(0.0, ge=0.0, le=1.0)
 
     @field_validator("image_size")
-    def validate_image_size(self, v):
+    def validate_image_size(cls, v):
         width, height = v.split("x")
         if not (width.isdigit() and height.isdigit()):
             raise ValueError('image_size must be in the format "widthxheight"')
         return v
 
     @field_validator("output_format")
-    def validate_output_format(self, v):
+    def validate_output_format(cls, v):
         if v.lower() not in ["png", "jpg", "jpeg", "webp"]:
             raise ValueError('output_format must be one of: png, jpg, jpeg, webp')
         return v.lower()
 
     @field_validator("seed")
-    def validate_seed(self, v):
+    def validate_seed(cls, v):
         return None if v is None else v
 
 
@@ -62,7 +63,7 @@ class StableDiffusionGenerator:
                 or self.custom_model_path
             ):
                 model_path = (
-                    self.custom_model_path or model_version
+                    self.custom_model_path if self.custom_model_path else model_version
                 )
                 self.pipeline = StableDiffusionPipeline.from_pretrained(
                     model_path,
@@ -83,7 +84,7 @@ class StableDiffusionGenerator:
                     )
                 self.custom_model_path = None
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Error loading pipeline: {str(e)}") from e
+            raise HTTPException(status_code=500, detail=f"Error loading pipeline: {str(e)}")
 
     def generate(self, prompt: str, settings: Settings) -> str:
         if not prompt or not prompt.strip():
@@ -100,35 +101,29 @@ class StableDiffusionGenerator:
             except ValueError:
                 raise HTTPException(status_code=400, detail="Invalid image size format")
 
-            try:
-                seed_generator = (
-                    torch.manual_seed(settings.seed) if settings.seed is not None else None
-                )
-            except Exception as e:
-                raise HTTPException(status_code=500, detail=f"Error setting seed: {str(e)}")
+            generator = (
+                torch.manual_seed(settings.seed) if settings.seed is not None else None
+            )
 
             with torch.autocast("cuda"):
-                try:
-                    output = self.pipeline(
-                        prompt,
-                        guidance_scale=settings.guidance_scale,
-                        num_inference_steps=settings.num_steps,
-                        width=width,
-                        height=height,
-                        num_images_per_prompt=settings.num_images,
-                        eta=settings.eta,
-                        generator=seed_generator,
-                    )
-                    images = output.images
-                except Exception as e:
-                    raise HTTPException(status_code=500, detail=f"Pipeline error: {str(e)}")
+                output = self.pipeline(
+                    prompt,
+                    guidance_scale=settings.guidance_scale,
+                    num_inference_steps=settings.num_steps,
+                    width=width,
+                    height=height,
+                    num_images_per_prompt=settings.num_images,
+                    eta=settings.eta,
+                    generator=generator,
+                )
+                images = output.images
 
             os.makedirs("output", exist_ok=True)
 
             image_paths = []
             for i, image in enumerate(images):
+                save_path = f"output/generated_image_{i}.{settings.output_format}"
                 try:
-                    save_path = f"output/generated_image_{i}.{settings.output_format}"
                     if settings.save_metadata:
                         metadata = {"prompt": prompt, "settings": settings.model_dump()}
                         image.save(
@@ -145,12 +140,10 @@ class StableDiffusionGenerator:
                     ) from e
 
             return image_paths
+        except HTTPException as e:
+            raise e
         except Exception as e:
-            if isinstance(e, HTTPException):
-                raise e
-            raise HTTPException(
-                status_code=500, detail=f"Error generating image: {str(e)}"
-            ) from e
+            raise HTTPException(status_code=500, detail=f"Error generating image: {str(e)}")
 
 
 generator = StableDiffusionGenerator()
@@ -191,6 +184,26 @@ async def get_image(image_name: str):
     if os.path.exists(image_path):
         return FileResponse(image_path)
     raise HTTPException(status_code=404, detail="Image not found")
+
+
+@app.get("/memory_stats")
+async def get_memory_stats():
+    try:
+        if not torch.cuda.is_available():
+            return {"error": "CUDA not available"}
+        
+        total_memory = torch.cuda.get_device_properties(0).total_memory / 1024**3  # GB
+        used_memory = torch.cuda.memory_allocated(0) / 1024**3  # GB
+        reserved_memory = torch.cuda.memory_reserved(0) / 1024**3  # GB
+        
+        return {
+            "total": round(total_memory, 2),
+            "used": round(used_memory, 2),
+            "reserved": round(reserved_memory, 2),
+            "free": round(total_memory - reserved_memory, 2)
+        }
+    except Exception as e:
+        return {"error": str(e)}
 
 
 if __name__ == "__main__":
