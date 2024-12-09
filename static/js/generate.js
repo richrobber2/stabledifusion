@@ -6,6 +6,11 @@ export async function generateImage() {
     const result = document.getElementById('result');
     const settings = getSettings();
 
+    if (!prompt) {
+        status.textContent = 'Error: Please enter a prompt';
+        return;
+    }
+
     status.textContent = 'Generating image...';
     result.style.display = 'none';
 
@@ -19,16 +24,22 @@ export async function generateImage() {
         });
 
         const data = await response.json();
-        if (response.ok) {
-            result.src = `/image/${data.image_paths[0].split('/').pop()}?t=${new Date().getTime()}`;
+        
+        if (response.ok && data.image_paths && data.image_paths.length > 0) {
+            const imagePath = data.image_paths[0];
+            const imageFileName = imagePath.split('/').pop();
+            result.src = `/image/${imageFileName}?t=${new Date().getTime()}`;
             result.style.display = 'block';
             document.getElementById('downloadBtn').style.display = 'block';
             status.textContent = 'Image generated successfully!';
         } else {
-            status.textContent = `Error: ${data.detail}`;
+            console.error('Error response:', data);
+            const errorDetail = data.detail || 'Unknown error occurred';
+            status.textContent = `Error: ${typeof errorDetail === 'object' ? JSON.stringify(errorDetail) : errorDetail}`;
         }
     } catch (error) {
-        status.textContent = `Error: ${error.message}`;
+        console.error('Fetch error:', error);
+        status.textContent = `Error: ${error.message || 'Failed to generate image'}`;
     }
 }
 

@@ -103,7 +103,7 @@
             <h4>Output Settings</h4>
             <div class="setting-item">
                 <label for="output_format">Image Format</label>
-                <select id="output_format"></select>
+                <select id="output_format">
                     <option value="png">PNG</option>
                     <option value="jpg">JPEG</option>
                     <option value="webp">WebP</option>
@@ -125,6 +125,8 @@
         document.querySelector('.settings-toggle').addEventListener('click', toggleSettings);
         makeSettingsPanelDraggable();
 
+        // Make functions globally available
+        window.toggleSettings = toggleSettings;
         window.generateImage = generateImage;
         window.downloadImage = downloadImage;
     </script>

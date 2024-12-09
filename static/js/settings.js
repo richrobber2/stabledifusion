@@ -4,6 +4,7 @@ export function toggleSettings() {
 }
 
 export function getSettings() {
+    const seedValue = document.getElementById('seed').value;
     return {
         guidance_scale: parseFloat(document.getElementById('guidance_scale').value),
         num_steps: parseInt(document.getElementById('num_steps').value),
@@ -14,7 +15,7 @@ export function getSettings() {
         nsfw_filter: document.getElementById('nsfw_filter').checked,
         output_format: document.getElementById('output_format').value,
         save_metadata: document.getElementById('save_metadata').checked,
-        seed: document.getElementById('seed').value ? parseInt(document.getElementById('seed').value) : null,
+        seed: seedValue === "" ? undefined : parseInt(seedValue),
         num_images: parseInt(document.getElementById('num_images').value),
         eta: parseFloat(document.getElementById('eta').value),
     };
