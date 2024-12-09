@@ -1,0 +1,68 @@
+.settings-panel {
+    background: rgba(43, 45, 49, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 10px;
+    padding: 20px;
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 300px;
+    cursor: move;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    display: none;
+    min-width: 320px;
+    max-width: 400px;
+    resize: horizontal;
+    overflow: auto;
+}
+
+.settings-group {
+    margin-bottom: 20px;
+}
+
+.settings-group h4 {
+    color: var(--text);
+    margin-bottom: 10px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.setting-item {
+    margin-bottom: 12px;
+}
+
+.setting-item label {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.setting-item input[type="number"],
+.setting-item input[type="text"],
+.setting-item select {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    padding: 8px;
+    color: var(--text);
+    font-size: 13px;
+}
+
+.setting-item input[type="range"] {
+    width: 100%;
+    accent-color: var(--accent);
+}
+
+.setting-item .range-value {
+    color: var(--text-muted);
+    font-size: 12px;
+    text-align: right;
+}
+
+.checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}

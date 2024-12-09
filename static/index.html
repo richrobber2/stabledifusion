@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stable Diffusion</title>
+    <link rel="stylesheet" href="static/css/styles.css">
+    <link rel="stylesheet" href="static/css/settings.css">
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar glass-card">
+            <h2>Stable Diffusion</h2>
+            <div style="margin-top: 20px;">
+                <label for="prompt">Prompt</label>
+                <textarea id="prompt">A serene landscape with mountains and a river at sunset.</textarea>
+                <button onclick="generateImage()">Generate</button>
+                <p id="status" class="status"></p>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <img id="result" style="display: none;">
+            <button id="downloadBtn" style="display: none;" onclick="downloadImage()">Download Image</button>
+        </div>
+    </div>
+
+    <div class="settings-toggle" onclick="toggleSettings()">⚙️</div>
+
+    <div id="settingsPanel" class="settings-panel no-select">
+        <h3>Settings</h3>
+        
+        <div class="settings-group">
+            <h4>Generation Settings</h4>
+            <div class="setting-item">
+                <label for="guidance_scale">Guidance Scale</label>
+                <input type="range" id="guidance_scale" min="1" max="20" value="7.5" step="0.5">
+                <div class="range-value" id="guidance_scale_value">7.5</div>
+            </div>
+            <div class="setting-item">
+                <label for="num_steps">Number of Steps</label>
+                <input type="range" id="num_steps" min="20" max="150" value="50" step="1">
+                <div class="range-value" id="num_steps_value">50</div>
+            </div>
+            <div class="setting-item">
+                <label for="image_size">Image Size</label>
+                <select id="image_size">
+                    <option value="512x512">512 x 512</option>
+                    <option value="768x768">768 x 768</option>
+                    <option value="1024x1024">1024 x 1024</option>
+                </select>
+            </div>
+            <div class="setting-item">
+                <label for="seed">Seed</label>
+                <input type="number" id="seed" placeholder="Optional">
+            </div>
+            <div class="setting-item">
+                <label for="num_images">Number of Images</label>
+                <input type="number" id="num_images" min="1" max="10" value="1">
+            </div>
+            <div class="setting-item">
+                <label for="eta">Denoising Strength (ETA)</label>
+                <input type="range" id="eta" min="0" max="1" value="0.0" step="0.01">
+                <div class="range-value" id="eta_value">0.0</div>
+            </div>
+        </div>
+
+        <div class="settings-group">
+            <h4>Model Settings</h4>
+            <div class="setting-item">
+                <label for="model_version">Model Version</label>
+                <select id="model_version">
+                    <option value="CompVis/stable-diffusion-v1-4">SD 1.4</option>
+                    <option value="runwayml/stable-diffusion-v1-5">SD 1.5</option>
+                    <option value="stabilityai/stable-diffusion-2-1">SD 2.1</option>
+                </select>
+            </div>
+            <div class="setting-item">
+                <div class="checkbox-wrapper">
+                    <input type="checkbox" id="use_half_precision" checked>
+                    <label for="use_half_precision">Use Half Precision (FP16)</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-group">
+            <h4>Safety & Filters</h4>
+            <div class="setting-item">
+                <div class="checkbox-wrapper">
+                    <input type="checkbox" id="safety_checker" checked>
+                    <label for="safety_checker">Enable Safety Checker</label>
+                </div>
+            </div>
+            <div class="setting-item">
+                <div class="checkbox-wrapper">
+                    <input type="checkbox" id="nsfw_filter" checked>
+                    <label for="nsfw_filter">NSFW Filter</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-group">
+            <h4>Output Settings</h4>
+            <div class="setting-item">
+                <label for="output_format">Image Format</label>
+                <select id="output_format"></select>
+                    <option value="png">PNG</option>
+                    <option value="jpg">JPEG</option>
+                    <option value="webp">WebP</option>
+                </select>
+            </div>
+            <div class="setting-item">
+                <div class="checkbox-wrapper">
+                    <input type="checkbox" id="save_metadata" checked>
+                    <label for="save_metadata">Save Generation Metadata</label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { toggleSettings, makeSettingsPanelDraggable } from './static/js/settings.js';
+        import { generateImage, downloadImage } from './static/js/generate.js';
+
+        document.querySelector('.settings-toggle').addEventListener('click', toggleSettings);
+        makeSettingsPanelDraggable();
+
+        window.generateImage = generateImage;
+        window.downloadImage = downloadImage;
+    </script>
+</body>
+</html>
